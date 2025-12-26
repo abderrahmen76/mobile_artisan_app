@@ -99,6 +99,23 @@ lib/
 - [ ] Add search and filtering
 - [ ] Implement rating and review system
 
+## 📚 Documentation
+
+This project has comprehensive documentation to help you understand and work with the codebase:
+
+- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Start here! Navigation guide for all documentation
+- **[QUICKSTART.md](QUICKSTART.md)** - Developer setup guide (10 minutes to run the app)
+- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Complete project summary and features
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture deep dive
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Supabase API reference and examples
+
+### Quick Links
+
+**For New Developers**: Start with [QUICKSTART.md](QUICKSTART.md) to get the app running  
+**For Project Managers**: Read [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) for complete scope  
+**For Architects**: Deep dive into [ARCHITECTURE.md](ARCHITECTURE.md)  
+**For API Integration**: See [API_REFERENCE.md](API_REFERENCE.md)
+
 ## Notes
 
 - This is an MVP skeleton with UI placeholders
