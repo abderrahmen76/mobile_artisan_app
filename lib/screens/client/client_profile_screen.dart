@@ -24,7 +24,8 @@ class ClientProfileScreen extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
                       child: Icon(
                         Icons.person,
                         size: 50,
@@ -56,7 +57,7 @@ class ClientProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Profile Options
             Card(
               child: Column(
@@ -124,7 +125,7 @@ class ClientProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Support & About
             Card(
               child: Column(
@@ -154,7 +155,7 @@ class ClientProfileScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.logout,
                       color: Colors.red,
                     ),
@@ -168,7 +169,8 @@ class ClientProfileScreen extends ConsumerWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content:
+                              const Text('Are you sure you want to logout?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -199,4 +201,3 @@ class ClientProfileScreen extends ConsumerWidget {
     );
   }
 }
-

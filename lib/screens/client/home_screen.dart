@@ -41,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Quick Actions
             Text(
               'Quick Actions',
@@ -106,7 +106,7 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Popular Services
             Text(
               'Popular Services',
@@ -146,7 +146,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Recent Requests
             Text(
               'Recent Requests',
@@ -162,14 +162,15 @@ class HomeScreen extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.secondaryContainer,
                       child: Icon(
                         Icons.assignment_outlined,
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                     title: Text('Request ${index + 1}'),
-                    subtitle: Text('Status: Pending'),
+                    subtitle: const Text('Status: Pending'),
                     trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
@@ -189,4 +190,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-

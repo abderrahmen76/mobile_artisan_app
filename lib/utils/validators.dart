@@ -1,10 +1,11 @@
 // Custom validators for form validation
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 class AppValidators {
-  static String? Function(String?) emailValidator = FormBuilderValidators.email();
+  static String? Function(String?) emailValidator =
+      FormBuilderValidators.email();
 
-  static String? Function(String?) requiredValidator = FormBuilderValidators.required();
+  static String? Function(String?) requiredValidator =
+      FormBuilderValidators.required();
 
   static String? Function(String?) minLengthValidator(int length) {
     return FormBuilderValidators.minLength(length);
@@ -32,4 +33,3 @@ class AppValidators {
     return null;
   };
 }
-

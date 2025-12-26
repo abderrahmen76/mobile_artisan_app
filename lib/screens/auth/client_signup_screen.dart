@@ -27,7 +27,15 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
   final _passwordController = TextEditingController();
   final _imagePicker = ImagePicker();
   File? _avatarFile;
+  String? _selectedAvatarAsset;
   bool _isLoading = false;
+
+  static const _presetAvatars = [
+    'assets/images/avatars/avatar_1.png',
+    'assets/images/avatars/avatar_2.png',
+    'assets/images/avatars/avatar_3.png',
+    'assets/images/avatars/avatar_4.png',
+  ];
 
   Future<void> _setLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
@@ -43,7 +51,7 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await supabaseService.signUpClient(
+      final response = await supabaseService.signUpClient(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         firstName: _firstNameController.text.trim(),
@@ -51,17 +59,24 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
         phone: '+216${_phoneController.text.trim()}',
       );
 
-      // Optional avatar upload
-      final user = supabaseService.client.auth.currentUser;
-      if (_avatarFile != null && user != null) {
-        final url = await supabaseService.uploadProfileImage(
-          file: _avatarFile!,
-          userId: user.id,
-        );
-        if (url != null) {
-          await supabaseService.client
-              .from('client_profiles')
-              .update({'avatar_url': url}).eq('id', user.id);
+      // Optional avatar (upload or preset)
+      final user = response.user;
+      if (user != null) {
+        if (_avatarFile != null) {
+          final url = await supabaseService.uploadProfileImage(
+            file: _avatarFile!,
+            userId: user.id,
+          );
+          if (url != null) {
+            await supabaseService.client
+                .from('client_profiles')
+                .update({'avatar_url': url}).eq('id', user.id);
+          }
+        } else if (_selectedAvatarAsset != null) {
+          // NOTE: Requires an `avatar_asset` text column in client_profiles.
+          await supabaseService.client.from('client_profiles').update({
+            'avatar_asset': _selectedAvatarAsset,
+          }).eq('id', user.id);
         }
       }
 
@@ -97,7 +112,92 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
       imageQuality: 80,
     );
     if (picked == null) return;
-    setState(() => _avatarFile = File(picked.path));
+    setState(() {
+      _avatarFile = File(picked.path);
+      _selectedAvatarAsset = null;
+    });
+  }
+
+  Future<void> _showAvatarPicker() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Choose an avatar',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _pickAvatar();
+                },
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Upload from gallery'),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Or pick a preset avatar',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _presetAvatars.map((asset) {
+                  final isSelected = _selectedAvatarAsset == asset;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedAvatarAsset = asset;
+                        _avatarFile = null;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppTheme.primaryColor
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 26,
+                        backgroundImage: AssetImage(asset),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -133,7 +233,7 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
               // Optional avatar
               Center(
                 child: GestureDetector(
-                  onTap: _pickAvatar,
+                  onTap: _showAvatarPicker,
                   child: Stack(
                     children: [
                       CircleAvatar(
@@ -141,22 +241,26 @@ class _ClientSignupScreenState extends ConsumerState<ClientSignupScreen> {
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage: _avatarFile != null
                             ? FileImage(_avatarFile!)
-                            : null,
-                        child: _avatarFile == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.grey,
-                              )
-                            : null,
+                            : (_selectedAvatarAsset != null
+                                ? AssetImage(_selectedAvatarAsset!)
+                                    as ImageProvider
+                                : null),
+                        child:
+                            _avatarFile == null && _selectedAvatarAsset == null
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  )
+                                : null,
                       ),
-                      Positioned(
+                      const Positioned(
                         bottom: 0,
                         right: 0,
                         child: CircleAvatar(
                           radius: 14,
                           backgroundColor: AppTheme.primaryColor,
-                          child: const Icon(
+                          child: Icon(
                             Icons.camera_alt_outlined,
                             size: 14,
                             color: Colors.white,

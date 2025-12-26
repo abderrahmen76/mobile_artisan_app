@@ -37,6 +37,10 @@ class ArtisanDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile header with avatar
+            _ArtisanProfileHeader(ref: ref),
+            const SizedBox(height: 16),
+
             // Stats Overview
             Row(
               children: [
@@ -94,7 +98,7 @@ class ArtisanDashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -151,7 +155,7 @@ class ArtisanDashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Earnings Chart
             Card(
               child: Padding(
@@ -168,8 +172,8 @@ class ArtisanDashboardScreen extends ConsumerWidget {
                       height: 200,
                       child: LineChart(
                         LineChartData(
-                          gridData: FlGridData(show: false),
-                          titlesData: FlTitlesData(show: false),
+                          gridData: const FlGridData(show: false),
+                          titlesData: const FlTitlesData(show: false),
                           borderData: FlBorderData(show: false),
                           lineBarsData: [
                             LineChartBarData(
@@ -185,7 +189,7 @@ class ArtisanDashboardScreen extends ConsumerWidget {
                               isCurved: true,
                               color: Theme.of(context).colorScheme.primary,
                               barWidth: 3,
-                              dotData: FlDotData(show: false),
+                              dotData: const FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
                                 color: Theme.of(context)
@@ -203,7 +207,7 @@ class ArtisanDashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Recent Jobs
             Text(
               'Recent Jobs',
@@ -219,14 +223,15 @@ class ArtisanDashboardScreen extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.secondaryContainer,
                       child: Icon(
                         Icons.person_outline,
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                     title: Text('Job ${index + 1}'),
-                    subtitle: Text('Client: John Doe'),
+                    subtitle: const Text('Client: John Doe'),
                     trailing: Chip(
                       label: const Text('In Progress'),
                       backgroundColor: Colors.blue.shade100,
@@ -250,3 +255,68 @@ class ArtisanDashboardScreen extends ConsumerWidget {
   }
 }
 
+class _ArtisanProfileHeader extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _ArtisanProfileHeader({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _fetchArtisanProfile(ref),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final avatarUrl = profile?['avatar_url'] as String?;
+        final avatarAsset = profile?['avatar_asset'] as String?;
+        final fullName = profile?['full_name'] as String? ?? '';
+
+        ImageProvider? imageProvider;
+        if (avatarUrl != null && avatarUrl.isNotEmpty) {
+          imageProvider = NetworkImage(avatarUrl);
+        } else if (avatarAsset != null && avatarAsset.isNotEmpty) {
+          imageProvider = AssetImage(avatarAsset);
+        }
+
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundImage: imageProvider,
+              child: imageProvider == null
+                  ? const Icon(Icons.person, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fullName.isNotEmpty ? 'Hi, $fullName' : 'Hi there',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  'Here is your overview',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+Future<Map<String, dynamic>?> _fetchArtisanProfile(WidgetRef ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return null;
+
+  final result = await client
+      .from('artisan_profiles')
+      .select()
+      .eq('id', user.id)
+      .maybeSingle();
+
+  return result;
+}

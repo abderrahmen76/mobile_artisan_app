@@ -58,7 +58,7 @@ class TrainingScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Progress Chart
             Card(
               child: Padding(
@@ -84,25 +84,34 @@ class TrainingScreen extends ConsumerWidget {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
-                                  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                                  if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                  const days = [
+                                    'Mon',
+                                    'Tue',
+                                    'Wed',
+                                    'Thu',
+                                    'Fri',
+                                    'Sat',
+                                    'Sun'
+                                  ];
+                                  if (value.toInt() >= 0 &&
+                                      value.toInt() < days.length) {
                                     return Text(days[value.toInt()]);
                                   }
                                   return const Text('');
                                 },
                               ),
                             ),
-                            leftTitles: AxisTitles(
+                            leftTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false),
                             ),
-                            topTitles: AxisTitles(
+                            topTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false),
                             ),
-                            rightTitles: AxisTitles(
+                            rightTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false),
                             ),
                           ),
-                          gridData: FlGridData(show: false),
+                          gridData: const FlGridData(show: false),
                           borderData: FlBorderData(show: false),
                           barGroups: [
                             BarChartGroupData(
@@ -149,7 +158,8 @@ class TrainingScreen extends ConsumerWidget {
                               barRods: [
                                 BarChartRodData(
                                   toY: 7,
-                                  color: Theme.of(context).colorScheme.secondary,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
                                   width: 20,
                                   borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(4),
@@ -205,7 +215,7 @@ class TrainingScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Available Courses
             Text(
               'Available Courses',
@@ -219,7 +229,7 @@ class TrainingScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final isCompleted = index < 2;
                 final isInProgress = index == 2;
-                
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
@@ -269,7 +279,8 @@ class TrainingScreen extends ConsumerWidget {
                       if (!isCompleted && !isInProgress) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Complete previous courses to unlock'),
+                            content:
+                                Text('Complete previous courses to unlock'),
                           ),
                         );
                       } else {
@@ -281,7 +292,7 @@ class TrainingScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 24),
-            
+
             // Certificates
             Text(
               'Certificates',
@@ -335,4 +346,3 @@ class TrainingScreen extends ConsumerWidget {
     );
   }
 }
-

@@ -30,7 +30,15 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
   final _passwordController = TextEditingController();
   final _imagePicker = ImagePicker();
   File? _avatarFile;
+  String? _selectedAvatarAsset;
   bool _isLoading = false;
+
+  static const _presetAvatars = [
+    'assets/images/avatars/avatar_1.png',
+    'assets/images/avatars/avatar_2.png',
+    'assets/images/avatars/avatar_3.png',
+    'assets/images/avatars/avatar_4.png',
+  ];
 
   Future<void> _setLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,7 +54,7 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await supabaseService.signUpArtisan(
+      final response = await supabaseService.signUpArtisan(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         fullName: _fullNameController.text.trim(),
@@ -56,17 +64,24 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
         skills: _skillsController.text.trim(),
       );
 
-      // Optional avatar upload
-      final user = supabaseService.client.auth.currentUser;
-      if (_avatarFile != null && user != null) {
-        final url = await supabaseService.uploadProfileImage(
-          file: _avatarFile!,
-          userId: user.id,
-        );
-        if (url != null) {
-          await supabaseService.client
-              .from('artisan_profiles')
-              .update({'avatar_url': url}).eq('id', user.id);
+      // Optional avatar (upload or preset)
+      final user = response.user;
+      if (user != null) {
+        if (_avatarFile != null) {
+          final url = await supabaseService.uploadProfileImage(
+            file: _avatarFile!,
+            userId: user.id,
+          );
+          if (url != null) {
+            await supabaseService.client
+                .from('artisan_profiles')
+                .update({'avatar_url': url}).eq('id', user.id);
+          }
+        } else if (_selectedAvatarAsset != null) {
+          // NOTE: Requires an `avatar_asset` text column in artisan_profiles.
+          await supabaseService.client.from('artisan_profiles').update({
+            'avatar_asset': _selectedAvatarAsset,
+          }).eq('id', user.id);
         }
       }
 
@@ -102,7 +117,97 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
       imageQuality: 80,
     );
     if (picked == null) return;
-    setState(() => _avatarFile = File(picked.path));
+    setState(() {
+      _avatarFile = File(picked.path);
+      _selectedAvatarAsset = null;
+    });
+  }
+
+  Future<void> _showAvatarPicker() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Choose an avatar',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _pickAvatar();
+                },
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Upload from gallery'),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Or pick a preset avatar',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _presetAvatars.map((asset) {
+                  final isSelected = _selectedAvatarAsset == asset;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedAvatarAsset = asset;
+                        _avatarFile = null;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppTheme.primaryColor
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.asset(
+                          asset,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -188,7 +293,7 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
               const SizedBox(height: 24),
               Center(
                 child: GestureDetector(
-                  onTap: _pickAvatar,
+                  onTap: _showAvatarPicker,
                   child: Stack(
                     children: [
                       Container(
@@ -202,23 +307,29 @@ class _ArtisanSignupScreenState extends ConsumerState<ArtisanSignupScreen> {
                                   image: FileImage(_avatarFile!),
                                   fit: BoxFit.cover,
                                 )
-                              : null,
+                              : (_selectedAvatarAsset != null
+                                  ? DecorationImage(
+                                      image: AssetImage(_selectedAvatarAsset!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null),
                         ),
-                        child: _avatarFile == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 64,
-                                color: Colors.white,
-                              )
-                            : null,
+                        child:
+                            _avatarFile == null && _selectedAvatarAsset == null
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 64,
+                                    color: Colors.white,
+                                  )
+                                : null,
                       ),
-                      Positioned(
+                      const Positioned(
                         bottom: 8,
                         right: 8,
                         child: CircleAvatar(
                           radius: 18,
                           backgroundColor: AppTheme.primaryColor,
-                          child: const Icon(
+                          child: Icon(
                             Icons.camera_alt_outlined,
                             size: 18,
                             color: Colors.white,

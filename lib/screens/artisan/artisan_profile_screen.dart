@@ -24,7 +24,8 @@ class ArtisanProfileScreen extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
                       child: Icon(
                         Icons.person,
                         size: 50,
@@ -47,7 +48,7 @@ class ArtisanProfileScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.star,
                           color: Colors.amber,
                           size: 20,
@@ -77,7 +78,7 @@ class ArtisanProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Business Information
             Card(
               child: Column(
@@ -110,7 +111,8 @@ class ArtisanProfileScreen extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     title: const Text('Bio'),
-                    subtitle: const Text('Experienced plumber with 10+ years...'),
+                    subtitle:
+                        const Text('Experienced plumber with 10+ years...'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       // TODO: Edit bio
@@ -133,7 +135,7 @@ class ArtisanProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Profile Options
             Card(
               child: Column(
@@ -201,7 +203,7 @@ class ArtisanProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Support & About
             Card(
               child: Column(
@@ -231,7 +233,7 @@ class ArtisanProfileScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.logout,
                       color: Colors.red,
                     ),
@@ -245,7 +247,8 @@ class ArtisanProfileScreen extends ConsumerWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content:
+                              const Text('Are you sure you want to logout?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -276,4 +279,3 @@ class ArtisanProfileScreen extends ConsumerWidget {
     );
   }
 }
-

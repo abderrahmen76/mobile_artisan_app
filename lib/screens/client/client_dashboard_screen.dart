@@ -36,6 +36,10 @@ class ClientDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile header with avatar
+            _ClientProfileHeader(ref: ref),
+            const SizedBox(height: 16),
+
             // Stats Cards
             Row(
               children: [
@@ -93,7 +97,7 @@ class ClientDashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -150,7 +154,7 @@ class ClientDashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Active Requests
             Text(
               'Active Requests',
@@ -166,14 +170,15 @@ class ClientDashboardScreen extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ExpansionTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.secondaryContainer,
                       child: Icon(
                         Icons.build_outlined,
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                     title: Text('Request ${index + 1}'),
-                    subtitle: Text('Category: Plumbing'),
+                    subtitle: const Text('Category: Plumbing'),
                     trailing: Chip(
                       label: const Text('Pending'),
                       backgroundColor: Colors.orange.shade100,
@@ -227,3 +232,68 @@ class ClientDashboardScreen extends ConsumerWidget {
   }
 }
 
+class _ClientProfileHeader extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _ClientProfileHeader({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _fetchClientProfile(ref),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final avatarUrl = profile?['avatar_url'] as String?;
+        final avatarAsset = profile?['avatar_asset'] as String?;
+        final firstName = profile?['first_name'] as String? ?? '';
+
+        ImageProvider? imageProvider;
+        if (avatarUrl != null && avatarUrl.isNotEmpty) {
+          imageProvider = NetworkImage(avatarUrl);
+        } else if (avatarAsset != null && avatarAsset.isNotEmpty) {
+          imageProvider = AssetImage(avatarAsset);
+        }
+
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundImage: imageProvider,
+              child: imageProvider == null
+                  ? const Icon(Icons.person, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  firstName.isNotEmpty ? 'Hi, $firstName' : 'Hi there',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  'Welcome back 👋',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+Future<Map<String, dynamic>?> _fetchClientProfile(WidgetRef ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return null;
+
+  final result = await client
+      .from('client_profiles')
+      .select()
+      .eq('id', user.id)
+      .maybeSingle();
+
+  return result;
+}
